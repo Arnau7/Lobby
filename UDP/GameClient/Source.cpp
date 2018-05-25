@@ -296,23 +296,27 @@ int main()
 {
 	string nickname = "No Nickname";
 	string pwd = "";
-	int enterMode = 0;
-	cout << "Use '1' to Log in OR use '2' to Register" << endl;
-	cin >> enterMode;
-	if (enterMode == 1) {
-		cout << "Introduce your username: " << endl;
-		cin >> nickname;
-		cout << "Introduce your password: " << endl;
-		cin >> pwd;
-	}
-	else if (enterMode == 2) {
-		cout << "Pick your username: " << endl;
-		cin >> nickname;
-		cout << "Choose your password: " << endl;
-		cin >> pwd;
-	}
-	else {
-		cout << "Error" << endl;
+	while (true) {
+		int enterMode = 0;
+		cout << "Use '1' to Login OR use '2' to Register" << endl;
+		cin >> enterMode;
+		if (enterMode == 1) {
+			cout << "Introduce your username: " << endl;
+			cin >> nickname;
+			cout << "Introduce your password: " << endl;
+			cin >> pwd;
+			break;
+		}
+		else if (enterMode == 2) {
+			cout << "Pick your username: " << endl;
+			cin >> nickname;
+			cout << "Choose your password: " << endl;
+			cin >> pwd;
+			break;
+		}
+		else {
+			cout << "Error" << endl;
+		}
 	}
 
 	//cout << "Hello new player! Introduce your name please: ";
@@ -384,53 +388,20 @@ int main()
 
 						if (event.key.code == sf::Keyboard::Left)
 						{
-							//int8_t header = (int8_t)PacketType::PT_MOVE;
-							//sf::Packet pckLeft;
 							deltaX -= 15;
-							//cout << "Delta to send: " << deltaX << ", " << deltaY << endl;
-							//AccumMove acc(posX, num, deltaX, deltaY, posX, posY);
-							//aMoves.push_back(acc);
-							//cout << "Added to aMoves: " << aMoves.size() << endl;
-							//pckLeft << header << num << posX << posY;
-							//aSocket->send(pckLeft, SERVER_IP, SERVER_PORT);
-
 						}
 						else if (event.key.code == sf::Keyboard::Right)
 						{
-							//int8_t header = (int8_t)PacketType::PT_MOVE;
-							//sf::Packet pckRight;
-							deltaX += 15;
-							//cout << "Delta to send: " << deltaX << ", " << deltaY << endl;
-							//AccumMove acc(posX, num, deltaX, deltaY, posX, posY);
-							//aMoves.push_back(acc);
-							//cout << "Added to aMoves: " << aMoves.size() << endl;
-							//pckRight << header << num << posX << posY;
-							//aSocket->send(pckRight, SERVER_IP, SERVER_PORT);
+							deltaX += 15;	
 						}
 
 						if (event.key.code == sf::Keyboard::Up)
 						{
-							//int8_t header = (int8_t)PacketType::PT_MOVE;
-							//sf::Packet pckUp;
 							deltaY -= 15;
-							//cout << "Delta to send: " << deltaX << ", " << deltaY << endl;
-							//AccumMove acc(posX, num, deltaX, deltaY, posX, posY);
-							//aMoves.push_back(acc);
-							//cout << "Added to aMoves: " << aMoves.size() << endl;
-							//pckUp << header << num << posX << posY;
-							//aSocket->send(pckUp, SERVER_IP, SERVER_PORT);
 						}
 						else if (event.key.code == sf::Keyboard::Down)
 						{
-							//int8_t header = (int8_t)PacketType::PT_MOVE;
-							//sf::Packet pckDown;
 							deltaY += 15;
-							//cout << "Delta to send: " << deltaX << ", " << deltaY << endl;
-							//AccumMove acc(posX, num, deltaX, deltaY, posX, posY);
-							//aMoves.push_back(acc);
-							//cout << "Added to aMoves: " << aMoves.size() << endl;
-							//pckDown << header << num << posX << posY;
-							//aSocket->send(pckDown, SERVER_IP, SERVER_PORT);
 						}
 					}
 					break;

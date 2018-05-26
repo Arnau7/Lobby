@@ -2,16 +2,24 @@
 #include <iostream>
 #include "PlayerInfo.h"
 #include <map>
+
+using namespace std;
+using namespace sf;
+
 class Game
 {
 private:
-	std::string name;
+	string name;
 	int maxPlayers;
 	int playersOnline;
-	std::map<int, PlayerInfo> aPlayers;
+	map<int, PlayerInfo> aPlayers;
 	float coinX, coinY;
+	Time clock;
+	int gameID;
 public:
 	Game();
+	Game(int, int, std::string);
+	void Update();
 	~Game();
 
 };

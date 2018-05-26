@@ -71,7 +71,9 @@ enum PacketType
 	PT_PLAYING = 14, 
 	PT_ACKMOVE = 15,
 	PT_INTERACT = 16,
-	PT_ACK = 17
+	PT_ACK = 17,
+	PT_REGISTER = 18,
+	PT_LOGIN = 19
 };
 
 bool playerOnline = false;
@@ -296,6 +298,7 @@ int main()
 {
 	string nickname = "No Nickname";
 	string pwd = "";
+	int8_t headerEnter;
 	while (true) {
 		int enterMode = 0;
 		cout << "Use '1' to Login OR use '2' to Register" << endl;
@@ -305,6 +308,7 @@ int main()
 			cin >> nickname;
 			cout << "Introduce your password: " << endl;
 			cin >> pwd;
+			headerEnter = (int8_t)PacketType::PT_LOGIN;
 			break;
 		}
 		else if (enterMode == 2) {
@@ -312,6 +316,7 @@ int main()
 			cin >> nickname;
 			cout << "Choose your password: " << endl;
 			cin >> pwd;
+			headerEnter = (int8_t)PacketType::PT_REGISTER;
 			break;
 		}
 		else {
@@ -341,6 +346,17 @@ int main()
 	thread t(receieveMessage, aSocket, nickname);
 	//thread sM(SendMoves, aSocket);
 		//thread r(rrr);
+	//do {
+	//	if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
+	//		Packet pack;
+	//		//int8_t header = (int8_t)PacketType::PT_HELLO;
+	//		pack << headerEnter << nickname << pwd;
+	//		aSocket->send(pack, serverIp, port);
+	//		cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
+	//		clockCounter.restart();
+	//	}
+	//} while (!playerOnline);
+
 		do {
 			if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
 				Packet pack;

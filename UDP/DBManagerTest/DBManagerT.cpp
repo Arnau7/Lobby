@@ -17,6 +17,8 @@ DBManager::~DBManager()
 	delete con;
 }
 void DBManager::TestTable() {
+	/*stmt->execute("CREATE TABLE pruebatbl(id INT, label CHAR(1))");*/
+
 	//stmt->execute("DROP TABLE IF EXISTS UserAccounts"); // This command deletes the table!
 	//stmt->execute("CREATE TABLE UserAccounts(UserID INT, UserName VARCHAR(20))");
 
@@ -59,8 +61,9 @@ bool DBManager::AltaCuenta(string name, string pwd) {
 	delete rs;
 	if (num == 0) //Em puc donar d'alta, ja que 0 significa que no existeix cap ususari amb el nom introduït
 	{
+		cout << "Found" << endl;
 		//Introduïm nom i contrassenya a la base de dades
-		stmt->execute(("insert into UserAccounts (UserName, UserPwd) values ('" + name + "', '" + pwd + "')").c_str());
+		stmt->execute(("INSERT INTO UserAccounts(UserName, UserPwd, UserWins) VALUES ('" + name + "', '" + pwd + "', '0')").c_str());
 		cout << "User added" << endl;
 		return true;
 	}

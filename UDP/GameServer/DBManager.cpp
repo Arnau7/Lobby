@@ -28,7 +28,7 @@ bool DBManager::AltaCuenta(string name, string pwd) {
 	if (num == 0) //Em puc donar d'alta, ja que 0 significa que no existeix cap ususari amb el nom introduït
 	{
 		//Introduïm nom i contrassenya a la base de dades
-		stmt->execute(("insert into UserAccounts (UserName, UserPwd) values ('" + name + "', '" + pwd + "')").c_str());
+		stmt->execute(("insert into UserAccounts (UserName, UserPwd, UserWins) values ('" + name + "', '" + pwd + "', '0')").c_str());
 		cout << "User added" << endl;
 		return true;
 	}

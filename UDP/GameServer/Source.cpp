@@ -61,6 +61,7 @@ public:
 	Direction() {}
 };
 
+DBManager* dbm;
 vector<Direction> aClientsDir;
 map<int, PlayerInfo> aPlayers;
 list<AccumMove> aMoves;
@@ -91,22 +92,24 @@ void receieveMessage(UdpSocket* socket) {
 			int8_t header;
 			pack >> header;
 			if (header == PacketType::PT_REGISTER) {
+				cout << "Register received" << endl;
 				string username, pwd;
 				pack >> username >> pwd;
-				//dbm->AltaCuenta(username, pwd);
+				dbm->AltaCuenta(username, pwd);
 				int8_t hLobyy = ((int8_t)PacketType::PT_LOBBY);
 				Packet pck;
 				pck << hLobyy;
-				socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
+				socket->send(pck, ip, port);
 			}
 			else if (header == PacketType::PT_LOGIN) {
+				cout << "Login received" << endl;
 				string username, pwd;
 				pack >> username >> pwd;
-				//dbm->Login(username, pwd);
+				dbm->Login(username, pwd);
 				int8_t hLobby = ((int8_t)PacketType::PT_LOBBY);
 				Packet pck;
 				pck << hLobby;
-				socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
+				socket->send(pck, ip, port);
 			}
 			else if (header == PacketType::PT_HELLO) {
 				if (playersOnline < 4) {
@@ -324,7 +327,7 @@ void receieveMessage(UdpSocket* socket) {
 
 int main()
 {
-	//DBManager* dbm = new DBManager();
+	dbm = new DBManager();
 	//sql::Driver* driver;
 	//sql::Connection* con;
 	//sql::Statement* stmt;

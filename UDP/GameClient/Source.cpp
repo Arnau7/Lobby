@@ -371,7 +371,7 @@ int main()
 				cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
 				clockCounter.restart();
 			}
-		} while (!playerOnline);
+		} while (!playerOnline && enterLobby);
 
 		cout << "All OK, start!" << endl;
 		/*while (true) {

@@ -73,9 +73,11 @@ enum PacketType
 	PT_INTERACT = 16,
 	PT_ACK = 17,
 	PT_REGISTER = 18,
-	PT_LOGIN = 19
+	PT_LOGIN = 19,
+	PT_LOBBY = 20
 };
 
+bool enterLobby = false;
 bool playerOnline = false;
 map<int, PlayerInfo> aPlayers;
 int num; //USED as client local global player ID
@@ -109,6 +111,9 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 			int8_t header;
 			newPack >> header;
 			int id = 0;
+			if (header == PT_LOBBY) {
+				enterLobby = true;
+			}
 			//Used to asign a initial position given by the server
 			if (header == PT_WELCOME) {
 				newPack >> id >> posX >> posY;
@@ -346,16 +351,16 @@ int main()
 	thread t(receieveMessage, aSocket, nickname);
 	//thread sM(SendMoves, aSocket);
 		//thread r(rrr);
-	//do {
-	//	if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
-	//		Packet pack;
-	//		//int8_t header = (int8_t)PacketType::PT_HELLO;
-	//		pack << headerEnter << nickname << pwd;
-	//		aSocket->send(pack, serverIp, port);
-	//		cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
-	//		clockCounter.restart();
-	//	}
-	//} while (!playerOnline);
+	do {
+		if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
+			Packet pack;
+			//int8_t header = (int8_t)PacketType::PT_HELLO;
+			pack << headerEnter << nickname << pwd;
+			aSocket->send(pack, serverIp, port);
+			cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
+			clockCounter.restart();
+		}
+	} while (!enterLobby);
 
 		do {
 			if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {

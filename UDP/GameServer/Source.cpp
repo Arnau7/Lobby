@@ -41,7 +41,10 @@ enum PacketType
 	PT_PLAYING = 14,
 	PT_ACKMOVE = 15,
 	PT_INTERACT = 16,
-	PT_ACK = 17
+	PT_ACK = 17,
+	PT_REGISTER = 18,
+	PT_LOGIN = 19,
+	PT_LOBBY = 20
 };
 
 sf::Vector2f BoardToWindows(sf::Vector2f _position)
@@ -87,8 +90,25 @@ void receieveMessage(UdpSocket* socket) {
 		if (socket->receive(pack, ip, port) == Socket::Done) {
 			int8_t header;
 			pack >> header;
-
-			if (header == PacketType::PT_HELLO) {
+			if (header == PacketType::PT_REGISTER) {
+				string username, pwd;
+				pack >> username >> pwd;
+				//dbm->AltaCuenta(username, pwd);
+				int8_t hLobyy = ((int8_t)PacketType::PT_LOBBY);
+				Packet pck;
+				pck << hLobyy;
+				socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
+			}
+			else if (header == PacketType::PT_LOGIN) {
+				string username, pwd;
+				pack >> username >> pwd;
+				//dbm->Login(username, pwd);
+				int8_t hLobby = ((int8_t)PacketType::PT_LOBBY);
+				Packet pck;
+				pck << hLobby;
+				socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
+			}
+			else if (header == PacketType::PT_HELLO) {
 				if (playersOnline < 4) {
 					string nick;
 					pack >> nick;
@@ -304,10 +324,10 @@ void receieveMessage(UdpSocket* socket) {
 
 int main()
 {
-	DBManager* dbm = new DBManager();
-	sql::Driver* driver;
-	sql::Connection* con;
-	sql::Statement* stmt;
+	//DBManager* dbm = new DBManager();
+	//sql::Driver* driver;
+	//sql::Connection* con;
+	//sql::Statement* stmt;
 
 	cout << "Server online" << endl;
 	UdpSocket* serverSocket = new UdpSocket;

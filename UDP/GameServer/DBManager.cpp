@@ -37,6 +37,7 @@ bool DBManager::AltaCuenta(string name, string pwd) {
 	return false;
 }
 
+//Retorna true si l'ususari està registrat
 bool DBManager::Login(string name, string pwd) {
 	ResultSet* rs = stmt->executeQuery(("select count(*) from UserAccounts where UserName = '" + name + "' AND UserPwd = '" + pwd + "'").c_str());
 	rs->next();

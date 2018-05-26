@@ -9,7 +9,7 @@ using namespace sf;
 class Game
 {
 private:
-	string name;
+	string gameName;
 	int maxPlayers;
 	int playersOnline;
 	map<int, PlayerInfo> aPlayers;

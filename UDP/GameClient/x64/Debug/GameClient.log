@@ -1,11 +1,11 @@
 ﻿  Source.cpp
 d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(31): warning C4005: 'LADO_CASILLA': redefinición de macro
   d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(26): note: vea la definición anterior de 'LADO_CASILLA'
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(447): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(475): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(490): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(502): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(514): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(526): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(540): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(468): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(496): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(511): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(523): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(535): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(547): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(561): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
   GameClient.vcxproj -> D:\Arnau\ENTI\3r\Programació de jocs en xarxa\Lobby\UDP\x64\Debug\GameClient.exe

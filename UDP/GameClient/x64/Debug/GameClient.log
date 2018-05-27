@@ -1,12 +1,12 @@
 ﻿  Source.cpp
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(31): warning C4005: 'LADO_CASILLA': redefinición de macro
-  c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(26): note: vea la definición anterior de 'LADO_CASILLA'
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(468): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(496): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(511): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(523): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(535): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(547): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\users\miquel\documents\github\platilla_3projects\lobby\udp\gameclient\source.cpp(561): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-  GameClient.vcxproj -> C:\Users\Miquel\Documents\GitHub\Platilla_3Projects\Lobby\UDP\x64\Debug\GameClient.exe
-  GameClient.vcxproj -> C:\Users\Miquel\Documents\GitHub\Platilla_3Projects\Lobby\UDP\x64\Debug\GameClient.pdb (Partial PDB)
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(31): warning C4005: 'LADO_CASILLA': redefinición de macro
+  d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(26): note: vea la definición anterior de 'LADO_CASILLA'
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(386): warning C4553: '==': el operador no tiene efecto; ¿ha pensado en '='?
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(519): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(547): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(562): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(574): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(586): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(598): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+d:\arnau\enti\3r\programació de jocs en xarxa\lobby\udp\gameclient\source.cpp(612): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
+  GameClient.vcxproj -> D:\Arnau\ENTI\3r\Programació de jocs en xarxa\Lobby\UDP\x64\Debug\GameClient.exe

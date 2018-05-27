@@ -9,7 +9,7 @@
 using namespace std;
 using namespace sql;
 
-#define HOST "tcp://192.168.1.82:3306"
+#define HOST "tcp://192.168.1.47:3306"
 #define USER "root"
 #define PWD "linux123"
 
@@ -26,7 +26,9 @@ public:
 	bool AltaCuenta(string, string);
 	bool Login(string, string);
 	bool AddMatch(int);
+	void BeginSession(string);
 	void CloseSession();
+	void IncreaseWins(string);
 	DBManager();
 	~DBManager();
 };

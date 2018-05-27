@@ -44,7 +44,11 @@ enum PacketType
 	PT_ACK = 17,
 	PT_REGISTER = 18,
 	PT_LOGIN = 19,
-	PT_LOBBY = 20
+	PT_LOBBY = 20,
+	PT_LOBBYSUCCESS = 21,
+	PT_LOBBYFAIL = 22,
+	PT_ENDGAME = 23,
+	PT_LOSE = 24
 };
 
 sf::Vector2f BoardToWindows(sf::Vector2f _position)
@@ -75,8 +79,8 @@ bool checkInteract = false;
 int ackReceived = 0;
 
 void NewCoinPosition() {
-	int randX = rand() % 8*57+5;
-	int randY = rand() % 8*57+5;
+	int randX = rand() % 8 * 57 + 5;
+	int randY = rand() % 8 * 57 + 5;
 	coinX = randX;
 	coinY = randY;
 }
@@ -95,101 +99,121 @@ void receieveMessage(UdpSocket* socket) {
 				cout << "Register received" << endl;
 				string username, pwd;
 				pack >> username >> pwd;
-				dbm->AltaCuenta(username, pwd);
-				int8_t hLobyy = ((int8_t)PacketType::PT_LOBBY);
 				Packet pck;
+				int8_t hLobyy = ((int8_t)PacketType::PT_LOBBY);
 				pck << hLobyy;
+				if (dbm->AltaCuenta(username, pwd))
+				{
+					//cout << "LOBBYSUCCESS" << endl;
+					int8_t hStatus = ((int8_t)PacketType::PT_LOBBYSUCCESS);
+					pck << hStatus;
+				}
+				else if (!dbm->AltaCuenta(username, pwd)) {
+					//cout << "LOBBYFAIL" << endl;
+					int8_t hStatus = ((int8_t)PacketType::PT_LOBBYFAIL);
+					pck << hStatus;
+				}
 				socket->send(pck, ip, port);
 			}
 			else if (header == PacketType::PT_LOGIN) {
 				cout << "Login received" << endl;
 				string username, pwd;
 				pack >> username >> pwd;
-				dbm->Login(username, pwd);
-				int8_t hLobby = ((int8_t)PacketType::PT_LOBBY);
 				Packet pck;
-				pck << hLobby;
+				int8_t hLobyy = ((int8_t)PacketType::PT_LOBBY);
+				pck << hLobyy;
+				if (dbm->Login(username, pwd))
+				{
+					//cout << "LOBBYSUCCESS" << endl;
+					int8_t hStatus = ((int8_t)PacketType::PT_LOBBYSUCCESS);
+					pck << hStatus;
+				}
+				else if (!dbm->Login(username, pwd)) {
+					//cout << "LOBBYFAIL" << endl;
+					int8_t hStatus = ((int8_t)PacketType::PT_LOBBYFAIL);
+					pck << hStatus;
+				}
 				socket->send(pck, ip, port);
 			}
 			else if (header == PacketType::PT_HELLO) {
-				if (playersOnline < 4) {
+				if (playersOnline < 2) {
 					string nick;
 					pack >> nick;
 					//if (aPlayers.find(nick) == aPlayers.end()) {
 					cout << "The client " << playersOnline << " has the nickname " << nick << endl;
-						
-						aClientsDir.push_back(Direction(ip, port, nick));
-						PlayerInfo player(playersOnline, nick);
-						
-						//aPlayers[player.GetId()] = player;
-						cout << "We have received the player: " << nick << " ID: " << player.GetId() << endl;
 
-						Packet pck;
-						int8_t welcome = ((int8_t)PacketType::PT_WELCOME);
-						//Table size goes from 0 to 7
-						//Top left
-						if (playersOnline == 0)
-						{
-							player.SetPosition(0, 0);
+					aClientsDir.push_back(Direction(ip, port, nick));
+					PlayerInfo player(playersOnline, nick);
+
+					//aPlayers[player.GetId()] = player;
+					cout << "We have received the player: " << nick << " ID: " << player.GetId() << endl;
+
+					Packet pck;
+					int8_t welcome = ((int8_t)PacketType::PT_WELCOME);
+					//Table size goes from 0 to 7
+					//Top left
+					if (playersOnline == 0)
+					{
+						player.SetPosition(0, 0);
+					}
+					//Top right
+					else if (playersOnline == 1)
+					{
+						Vector2f vec(8 * 57 + 5, 0);
+						//BoardToWindows(vec);
+						cout << vec.x << vec.y << endl;
+						player.SetPosition(vec.x, vec.y);
+					}
+					//Bot left
+					else if (playersOnline == 2)
+					{
+						Vector2f vec(0, 8 * 57 + 5);
+						//BoardToWindows(vec);
+						player.SetPosition(vec.x, vec.y);
+					}
+					//Bot right
+					else if (playersOnline == 3)
+					{
+						Vector2f vec(8 * 57 + 5, 8 * 57 + 5);
+						//BoardToWindows(vec);
+						player.SetPosition(vec.x, vec.y);
+					}
+
+					aPlayers.insert(pair<int, PlayerInfo>(playersOnline, player));
+
+					cout << "Player " << player.GetId() << " at positions: " << player.GetX() << ", " << player.GetY() << endl;
+					pck << welcome << player.GetId() << player.GetX() << player.GetY();
+					socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
+					playersOnline++;
+					if (playersOnline == 2)
+					{
+						cout << "All players connected, start!" << endl;
+						Packet pckStart;
+						int8_t headerStart = (int8_t)PacketType::PT_START;
+						pckStart << headerStart << idCriticPacket;
+						for (map<int, PlayerInfo>::iterator it = aPlayers.begin(); it != aPlayers.end(); ++it) {
+							cout << "ID: " << it->second.GetId() << endl;
+							cout << "Packing position: " << it->second.GetX() << ", " << it->second.GetY() << endl;
+							pckStart << it->second.GetX() << it->second.GetY();
 						}
-						//Top right
-						else if (playersOnline == 1)
-						{
-							Vector2f vec(8 * 57 + 5, 0);
-							//BoardToWindows(vec);
-							cout << vec.x << vec.y << endl;
-							player.SetPosition(vec.x, vec.y);
-						}
-						//Bot left
-						else if (playersOnline == 2)
-						{
-							Vector2f vec(0, 8 * 57 + 5);
-							//BoardToWindows(vec);
-							player.SetPosition(vec.x, vec.y);
-						}
-						//Bot right
-						else if (playersOnline == 3)
-						{
-							Vector2f vec(8 * 57 + 5, 8 * 57 + 5);
-							//BoardToWindows(vec);
-							player.SetPosition(vec.x, vec.y);
+						/*for (int i = 0; i < 2; i++) {
+						cout << "Packing position: " << aPlayers[i].GetX() << ", " << aPlayers[i].GetY() << endl;
+						pckStart << aPlayers[i].GetX() << aPlayers[i].GetY();
+						}*/
+						coinX = 4 * 57 + 5;
+						coinY = 4 * 57 + 5;
+						cout << "Coin position: " << coinX << " , " << coinY << endl;
+						pckStart << coinX << coinY;
+
+						for (int i = 0; i < playersOnline; i++) {
+							CriticPack critic(idCriticPacket, pckStart, aClientsDir[i].ip, aClientsDir[i].port);
+							criticPackets[critic.idPacket] = critic;
+							idCriticPacket++;
 						}
 
-						aPlayers.insert(pair<int, PlayerInfo>(playersOnline, player));
+						cout << "Packets added as critic: " << criticPackets.size() << endl;
 
-						cout << "Player " << player.GetId() << " at positions: " << player.GetX() << ", " << player.GetY() << endl;
-						pck << welcome << player.GetId() << player.GetX() << player.GetY();
-						socket->send(pck, aClientsDir[playersOnline].ip, aClientsDir[playersOnline].port);
-						playersOnline++;
-						if (playersOnline == 4) 
-						{
-							cout << "All players connected, start!" << endl;
-							Packet pckStart;
-							int8_t headerStart = (int8_t)PacketType::PT_START;
-							pckStart << headerStart << idCriticPacket;
-							for (map<int, PlayerInfo>::iterator it = aPlayers.begin(); it != aPlayers.end(); ++it) {
-								cout << "ID: " << it->second.GetId() << endl;
-								cout << "Packing position: " << it->second.GetX() << ", " << it->second.GetY() << endl;
-								pckStart << it->second.GetX() << it->second.GetY();
-							}
-							/*for (int i = 0; i < 4; i++) {
-								cout << "Packing position: " << aPlayers[i].GetX() << ", " << aPlayers[i].GetY() << endl;
-								pckStart << aPlayers[i].GetX() << aPlayers[i].GetY();							
-							}*/
-							coinX = 4*57+5;
-							coinY = 4*57+5;
-							cout << "Coin position: " << coinX << " , " << coinY << endl;
-							pckStart << coinX << coinY;
-
-							for (int i = 0; i < playersOnline; i++) {
-								CriticPack critic(idCriticPacket, pckStart, aClientsDir[i].ip, aClientsDir[i].port);
-								criticPackets[critic.idPacket] = critic;
-								idCriticPacket++;
-							}
-
-							cout << "Packets added as critic: " << criticPackets.size() << endl;
-
-						}
+					}
 					//}
 					//else {
 					//	cout << "The nickname is in use, please try another" << endl;
@@ -204,24 +228,24 @@ void receieveMessage(UdpSocket* socket) {
 
 				}
 				else
-					cout << "4 players online, waiting on the queue" << endl;
+					cout << "2 players online, waiting on the queue" << endl;
 				// TODO send warning, server full
 			}
 			else if (header == PacketType::PT_INTERACT) {
 				checkInteract = true;
 			}
-			else if (header == PacketType::PT_MOVE) 
+			else if (header == PacketType::PT_MOVE)
 			{
 				int idMove, playerNum;
 				pack >> idMove >> playerNum;
 				int posX, posY, deltaX, deltaY;
-				pack >> deltaX  >> deltaY >> posX >> posY;
+				pack >> deltaX >> deltaY >> posX >> posY;
 				Vector2f vector(posX, posY);
 				BoardToWindows(vector);
-				if (vector.x <= 0)		{vector.x = 0;}
-				if (vector.y <= 0)		{vector.y = 0;}
-				if (vector.x >= 461)		{vector.x = 461;}
-				if (vector.y >= 461)		{vector.y = 461;}
+				if (vector.x <= 0) { vector.x = 0; }
+				if (vector.y <= 0) { vector.y = 0; }
+				if (vector.x >= 461) { vector.x = 461; }
+				if (vector.y >= 461) { vector.y = 461; }
 
 				AccumMove acc(idMove, playerNum, deltaX, deltaY, vector.x, vector.y);
 				int found = false;
@@ -229,19 +253,19 @@ void receieveMessage(UdpSocket* socket) {
 
 				/*for (it = aMoves.begin(); it != aMoves.end(); ++it)
 				{
-					if (it->idPlayer == playerNum) {
-						cout << "Values before merge: Pos: " << it->absolute_X << ", " << it->absolute_Y << " IdMove: " << it->idMove << " Delta: " << it->delta_Xs << ", " << it->delta_Ys << endl;
-						it->absolute_X = posX;
-						it->absolute_Y = posY;
-						it->idMove = idMove;
-						it->delta_Xs += deltaX;
-						it->delta_Ys += deltaY;
-						cout << "Values after merge: Pos: " << it->absolute_X << ", " << it->absolute_Y << " IdMove: " << it->idMove << " Delta: " << it->delta_Xs << ", " << it->delta_Ys << endl;
-						found = true;
-					}
-					else {}
+				if (it->idPlayer == playerNum) {
+				cout << "Values before merge: Pos: " << it->absolute_X << ", " << it->absolute_Y << " IdMove: " << it->idMove << " Delta: " << it->delta_Xs << ", " << it->delta_Ys << endl;
+				it->absolute_X = posX;
+				it->absolute_Y = posY;
+				it->idMove = idMove;
+				it->delta_Xs += deltaX;
+				it->delta_Ys += deltaY;
+				cout << "Values after merge: Pos: " << it->absolute_X << ", " << it->absolute_Y << " IdMove: " << it->idMove << " Delta: " << it->delta_Xs << ", " << it->delta_Ys << endl;
+				found = true;
+				}
+				else {}
 				}*/
-				
+
 				if (!found) {
 					aMoves.push_back(acc);
 				}
@@ -251,55 +275,55 @@ void receieveMessage(UdpSocket* socket) {
 				//std::cout << "Se intenta la pos " << posX << " " << posY << std::endl;
 				/*if ((posX >= 0 && posX <= 8) && (posY >= 0 && posY <= 8))
 				{
-					int8_t headerPos = ((int8_t)PacketType::PT_POSITION);
-					//std::cout << "Se confirma la pos " << posX << " " << posY << std::endl;
-					sf::Packet pckSend;
-					
-					//socket->send(pckSend, ip, port);
-					if (posX == coinX && posY == coinY) {
-						int8_t header2 = (int8_t)PacketType::PT_COIN;
-						pckSend << headerPos << header2 << playerNum << posX << posY;
-						NewCoinPosition();
-						pckSend << coinX << coinY;
-						aPlayers[playerNum].coins++;
+				int8_t headerPos = ((int8_t)PacketType::PT_POSITION);
+				//std::cout << "Se confirma la pos " << posX << " " << posY << std::endl;
+				sf::Packet pckSend;
 
-						//IF PLAYER WINS
-						if (aPlayers[playerNum].coins >= 3) {
-							int8_t header3 = (int8_t)PacketType::PT_WIN;
-							pckSend << header3 << playerNum;
-							for (int i = 0; i < 4; i++) {
-								socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-							}
-						}
-						//IF NO PLAYER WINS
-						else {
-							int8_t header3 = (int8_t)PacketType::PT_PLAYING;
-							pckSend << header3;
-							for (int i = 0; i < 4; i++) {
-								socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-							}
-						}
-					}
-					else {
-						for (int i = 0; i < 4; i++) {
-							cout << "Playernum: " << playerNum << ", i: " << i << endl;
-							if (playerNum != i) {
-								int8_t header2 = ((int8_t)PacketType::PT_MOVE);
-								pckSend << headerPos << header2 << playerNum << posX << posY;
-								socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-							}
-							else {
-								cout << "Send ACK to " << i << endl;
-								Packet ackPacket;
-								int8_t headerACK = ((int8_t)PacketType::PT_ACKMOVE);
-								ackPacket << headerPos << headerACK << idMove << posX << posY;
-								socket->send(ackPacket, aClientsDir[i].ip, aClientsDir[i].port);
-							}
-						}
-					}
+				//socket->send(pckSend, ip, port);
+				if (posX == coinX && posY == coinY) {
+				int8_t header2 = (int8_t)PacketType::PT_COIN;
+				pckSend << headerPos << header2 << playerNum << posX << posY;
+				NewCoinPosition();
+				pckSend << coinX << coinY;
+				aPlayers[playerNum].coins++;
+
+				//IF PLAYER WINS
+				if (aPlayers[playerNum].coins >= 3) {
+				int8_t header3 = (int8_t)PacketType::PT_WIN;
+				pckSend << header3 << playerNum;
+				for (int i = 0; i < 4; i++) {
+				socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
+				}
+				}
+				//IF NO PLAYER WINS
+				else {
+				int8_t header3 = (int8_t)PacketType::PT_PLAYING;
+				pckSend << header3;
+				for (int i = 0; i < 4; i++) {
+				socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
+				}
+				}
+				}
+				else {
+				for (int i = 0; i < 4; i++) {
+				cout << "Playernum: " << playerNum << ", i: " << i << endl;
+				if (playerNum != i) {
+				int8_t header2 = ((int8_t)PacketType::PT_MOVE);
+				pckSend << headerPos << header2 << playerNum << posX << posY;
+				socket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
+				}
+				else {
+				cout << "Send ACK to " << i << endl;
+				Packet ackPacket;
+				int8_t headerACK = ((int8_t)PacketType::PT_ACKMOVE);
+				ackPacket << headerPos << headerACK << idMove << posX << posY;
+				socket->send(ackPacket, aClientsDir[i].ip, aClientsDir[i].port);
+				}
+				}
+				}
 				}*/
 			}
-			else if (header == PacketType::PT_PING) 
+			else if (header == PacketType::PT_PING)
 			{
 				int id = 0;
 				pack >> id;
@@ -320,6 +344,23 @@ void receieveMessage(UdpSocket* socket) {
 				//		criticPackets.erase(idPacket);
 				//	}
 				//}
+			}
+			else if (header == PT_ENDGAME) {
+				int8_t header2;
+				pack >> header2;
+				if (header2 == PT_WIN) {
+					string username;
+					pack >> username;
+					dbm->IncreaseWins(username);
+					dbm->IncreaseGames(username);
+					cout << "Server increase wins and games done" << endl;
+				}
+				else if (header2 == PT_LOSE) {
+					string username;
+					pack >> username;
+					dbm->IncreaseGames(username);
+					cout << "Server increase games done" << endl;
+				}
 			}
 		}
 	}
@@ -346,104 +387,104 @@ int main()
 	int8_t headerPing = PacketType::PT_PING;
 	packPing << headerPing;
 
-		while (true) 
-		{
-			if (playersOnline > 0) {
-				if ((clockPing.getElapsedTime().asMilliseconds() >= 5000))
+	while (true)
+	{
+		if (playersOnline > 0) {
+			if ((clockPing.getElapsedTime().asMilliseconds() >= 5000))
+			{
+				for (int i = 0; i < playersOnline; i++)
 				{
-					for (int i = 0; i < playersOnline; i++)
-					{
-						serverSocket->send(packPing, aClientsDir[i].ip, aClientsDir[i].port);
-						aPlayers[i].testPing++;
-						if (aPlayers[i].online) { // si aquest player estava online
-							if (aPlayers[i].testPing >= 3) //té 3 avisos acumulats (fins a 15 segons) informem als clients
-							{
-								Packet pckDc;
-								int8_t headerDc = (int8_t)PacketType::PT_DISCONNECT;
-								pckDc << headerDc << aPlayers[i].GetId();
-								cout << "Player disconnected" << endl;
-								for (int i = 0; i < 4; i++) {
-									serverSocket->send(pckDc, aClientsDir[i].ip, aClientsDir[i].port);
-								}
-								aPlayers[i].online = false;
-							}
-						}
-					}
-					clockPing.restart();
-				}
-
-				if (clockMove.getElapsedTime().asMilliseconds() >= 100) {
-					list<AccumMove>::iterator it;
-					//cout << "Check" << endl;
-					if (aMoves.size() > 0) {
-						cout << "Found moves" << endl;
-						for (it = aMoves.begin(); it != aMoves.end(); ++it)
+					serverSocket->send(packPing, aClientsDir[i].ip, aClientsDir[i].port);
+					aPlayers[i].testPing++;
+					if (aPlayers[i].online) { // si aquest player estava online
+						if (aPlayers[i].testPing >= 3) //té 3 avisos acumulats (fins a 15 segons) informem als clients
 						{
-							if ((it->absolute_X >= 0 && it->absolute_X <= 8*57+5) && (it->absolute_Y >= 0 && it->absolute_Y <= 8*57+5)) {
-								int8_t headerPos = ((int8_t)PacketType::PT_POSITION);	
-								sf::Packet pckSend;
-								if (checkInteract && ((it->absolute_X >= coinX && it->absolute_X <= coinX+RADIO_AVATAR*2) 
-									&& (it->absolute_Y >= coinY && it->absolute_Y <= coinY+RADIO_AVATAR*2))) {
-									int8_t header2 = (int8_t)PacketType::PT_COIN;
-									pckSend << headerPos << header2 << it->idPlayer << it->absolute_X << it->absolute_Y;
+							Packet pckDc;
+							int8_t headerDc = (int8_t)PacketType::PT_DISCONNECT;
+							pckDc << headerDc << aPlayers[i].GetId();
+							cout << "Player disconnected" << endl;
+							for (int i = 0; i < 2; i++) {
+								serverSocket->send(pckDc, aClientsDir[i].ip, aClientsDir[i].port);
+							}
+							aPlayers[i].online = false;
+						}
+					}
+				}
+				clockPing.restart();
+			}
 
-									NewCoinPosition();
-									pckSend << coinX << coinY;
-									aPlayers[it->idPlayer].coins++;
-									//IF PLAYER WINS
-									if (aPlayers[it->idPlayer].coins >= 3) {
-										int8_t header3 = (int8_t)PacketType::PT_WIN;
-										pckSend << header3 << it->idPlayer;
-										for (int i = 0; i < 4; i++) {
-											serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-										}
+			if (clockMove.getElapsedTime().asMilliseconds() >= 100) {
+				list<AccumMove>::iterator it;
+				//cout << "Check" << endl;
+				if (aMoves.size() > 0) {
+					cout << "Found moves" << endl;
+					for (it = aMoves.begin(); it != aMoves.end(); ++it)
+					{
+						if ((it->absolute_X >= 0 && it->absolute_X <= 8 * 57 + 5) && (it->absolute_Y >= 0 && it->absolute_Y <= 8 * 57 + 5)) {
+							int8_t headerPos = ((int8_t)PacketType::PT_POSITION);
+							sf::Packet pckSend;
+							if (checkInteract && ((it->absolute_X >= coinX && it->absolute_X <= coinX + RADIO_AVATAR * 2)
+								&& (it->absolute_Y >= coinY && it->absolute_Y <= coinY + RADIO_AVATAR * 2))) {
+								int8_t header2 = (int8_t)PacketType::PT_COIN;
+								pckSend << headerPos << header2 << it->idPlayer << it->absolute_X << it->absolute_Y;
+
+								NewCoinPosition();
+								pckSend << coinX << coinY;
+								aPlayers[it->idPlayer].coins++;
+								//IF PLAYER WINS
+								if (aPlayers[it->idPlayer].coins >= 3) {
+									int8_t header3 = (int8_t)PacketType::PT_WIN;
+									pckSend << header3 << it->idPlayer;
+									for (int i = 0; i < 2; i++) {
+										serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
 									}
-									//IF NO PLAYER WINS
-									else {
-										int8_t header3 = (int8_t)PacketType::PT_PLAYING;
-										pckSend << header3;
-										for (int i = 0; i < 4; i++) {
-											serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-										}
-									}
-									checkInteract = false;
 								}
-
+								//IF NO PLAYER WINS
 								else {
-									for (int i = 0; i < 4; i++) {
-										//cout << "Playernum: " << it->idPlayer << ", i: " << i << endl;
-										if (it->idPlayer != i) {
-											int8_t header2 = ((int8_t)PacketType::PT_MOVE);
-											pckSend << headerPos << header2 << it->idPlayer << it->absolute_X << it->absolute_Y;
-											serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
-										}
-										else {
-											cout << "Send ACK to " << i << endl;
-											Packet ackPacket;
-											int8_t headerACK = ((int8_t)PacketType::PT_ACKMOVE);
-											ackPacket << headerPos << headerACK << it->idMove << it->absolute_X << it->absolute_Y;
-											serverSocket->send(ackPacket, aClientsDir[i].ip, aClientsDir[i].port);
-										}
+									int8_t header3 = (int8_t)PacketType::PT_PLAYING;
+									pckSend << header3;
+									for (int i = 0; i < 2; i++) {
+										serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
+									}
+								}
+								checkInteract = false;
+							}
+
+							else {
+								for (int i = 0; i < 2; i++) {
+									//cout << "Playernum: " << it->idPlayer << ", i: " << i << endl;
+									if (it->idPlayer != i) {
+										int8_t header2 = ((int8_t)PacketType::PT_MOVE);
+										pckSend << headerPos << header2 << it->idPlayer << it->absolute_X << it->absolute_Y;
+										serverSocket->send(pckSend, aClientsDir[i].ip, aClientsDir[i].port);
+									}
+									else {
+										cout << "Send ACK to " << i << endl;
+										Packet ackPacket;
+										int8_t headerACK = ((int8_t)PacketType::PT_ACKMOVE);
+										ackPacket << headerPos << headerACK << it->idMove << it->absolute_X << it->absolute_Y;
+										serverSocket->send(ackPacket, aClientsDir[i].ip, aClientsDir[i].port);
 									}
 								}
 							}
 						}
-						aMoves.clear();
 					}
-					clockMove.restart();
+					aMoves.clear();
 				}
-
-				if ((clockCritics.getElapsedTime().asMilliseconds() >= 1000))
-				{
-					if (criticPackets.size() > 0) {
-						for (int i = 0; i < criticPackets.size(); i++) {
-							criticPackets[i].sendPacket(serverSocket);
-						}
-						clockCritics.restart();
-					}
-				}
-
+				clockMove.restart();
 			}
+
+			if ((clockCritics.getElapsedTime().asMilliseconds() >= 1000))
+			{
+				if (criticPackets.size() > 0) {
+					for (int i = 0; i < criticPackets.size(); i++) {
+						criticPackets[i].sendPacket(serverSocket);
+					}
+					clockCritics.restart();
+				}
+			}
+
 		}
+	}
 	return 0;
 }

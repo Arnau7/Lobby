@@ -12,6 +12,9 @@ int main()
 	//dbM->TestTable();
 
 	//dbM->AltaCuenta("Joan", "linux123");
-	dbM->Login("Ripoll", "123");
+	//dbM->Login("Miquel", "linux1234");
+	//dbM->IncreaseWins("Arnau");
+	//dbM->BeginSession("Arnau");
+	//dbM->Login("Ripoll", "123");
 	getchar();
 }

@@ -27,6 +27,8 @@ public:
 	bool Login(string, string);
 	bool AddMatch(int);
 	void CloseSession();
+	void IncreaseGames(string);
+	void IncreaseWins(string);
 	DBManager();
 	~DBManager();
 };

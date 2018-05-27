@@ -68,17 +68,24 @@ enum PacketType
 	PT_COIN = 11,
 	PT_PING = 12,
 	PT_WIN = 13,
-	PT_PLAYING = 14, 
+	PT_PLAYING = 14,
 	PT_ACKMOVE = 15,
 	PT_INTERACT = 16,
 	PT_ACK = 17,
 	PT_REGISTER = 18,
 	PT_LOGIN = 19,
-	PT_LOBBY = 20
+	PT_LOBBY = 20,
+	PT_LOBBYSUCCESS = 21,
+	PT_LOBBYFAIL = 22,
+	PT_ENDGAME = 23,
+	PT_LOSE = 24
 };
 
+string _username = "";
 bool enterLobby = false;
+bool retryLobby = false;
 bool playerOnline = false;
+bool numberIncrease = false;
 map<int, PlayerInfo> aPlayers;
 int num; //USED as client local global player ID
 int coinX = 0;
@@ -103,7 +110,7 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 	Packet newPack;
 	IpAddress serverIp = SERVER_IP;
 	unsigned short port = SERVER_PORT;
-	cout << "Waiting" << endl;
+	//cout << "Waiting" << endl;
 
 	while (true) {
 		//ALL COMMANDS TO RECEIVE FROM THE SERVER
@@ -112,7 +119,17 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 			newPack >> header;
 			int id = 0;
 			if (header == PT_LOBBY) {
-				enterLobby = true;
+				//cout << "ENTERLOBBY" << endl;
+				int8_t header2;
+				newPack >> header2;
+				if (header2 == PT_LOBBYSUCCESS) {
+					enterLobby = true;
+					cout << "-----------------------" << endl << "Welcome to the Lobby!" << endl;
+				}
+				else if (header2 == PT_LOBBYFAIL) {
+					if (!enterLobby)
+						retryLobby = true;
+				}
 			}
 			//Used to asign a initial position given by the server
 			if (header == PT_WELCOME) {
@@ -127,7 +144,7 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 			//Used to make the player use a new nick in case it is used
 			else if (header == PT_USEDNICK) {
 				// TODO the player can't ask for a new name, also he's still sending messages of hello
-				
+
 				cout << "Another name: " << endl;
 				cin >> nickname;
 				Packet pck;
@@ -145,7 +162,7 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 			{
 				int8_t header2;
 				newPack >> header2;
-				if (header2 == PT_COIN) 
+				if (header2 == PT_COIN)
 				{
 					int playerNum;
 					int pX, pY;
@@ -213,21 +230,21 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 					int playerNum;
 					int pX, pY;
 					newPack >> playerNum >> pX >> pY;
-					cout << "Move the player: " << playerNum <<  " Size: " << aMoves.size() << endl;
+					cout << "Move the player: " << playerNum << " Size: " << aMoves.size() << endl;
 					aPlayers[playerNum].SetPosition(pX, pY);
 					//cout << "Recibo la confirmacion: " << pX << " " << pY << endl;
 				}
 
 			}
-			else if (header == PT_START) 
+			else if (header == PT_START)
 			{
 				int idPacket;
 				newPack >> idPacket;
-				for (int i = 0; i < 4; i++) {
+				for (int i = 0; i < 2; i++) {
 					int pX = 0;
 					int pY = 0;
 					newPack >> pX >> pY;
-					PlayerInfo player(i,nickname);
+					PlayerInfo player(i, nickname);
 					aPlayers[i] = player;
 					if (i != num) {
 						aPlayers[i].SetPosition(pX, pY);
@@ -243,8 +260,8 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 						}
 					}
 				}
-				playersOnline = 4;
-				
+				playersOnline = 2;
+
 				newPack >> coinX >> coinY;
 				cout << "Coin position: " << coinX << " , " << coinY << endl;
 
@@ -253,7 +270,7 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 				int8_t ackHeader = PacketType::PT_ACK;
 				ackPack << ackHeader << idPacket;
 				socket->send(ackPack, serverIp, port);
-
+				numberIncrease = false;
 				startGame = true;
 			}
 			else if (header == PT_PING) {
@@ -277,60 +294,38 @@ void receieveMessage(UdpSocket* socket, string nickname) {
 }
 /*
 void SendMoves(UdpSocket* socket) {
-	while (true)
-	{
-		if (aMoves.size() > 0) {
-			//cout << "Found!" << endl;
-			list<AccumMove>::iterator it;
-			for (it = aMoves.begin(); it != aMoves.end(); ++it)
-			{
-				Packet pack = it->CreatePacket();
-				int x, y, w, z, i;
-				int8_t var;
-				pack >> var >> x >> y >> w >> z >> i;
-				//cout << "Send the packet with positions: " << z << ", " << i << endl;
-				socket->send(pack, SERVER_IP, SERVER_PORT);
-			}
-			aMoves.pop_front();
-		}
-		else {
+while (true)
+{
+if (aMoves.size() > 0) {
+//cout << "Found!" << endl;
+list<AccumMove>::iterator it;
+for (it = aMoves.begin(); it != aMoves.end(); ++it)
+{
+Packet pack = it->CreatePacket();
+int x, y, w, z, i;
+int8_t var;
+pack >> var >> x >> y >> w >> z >> i;
+//cout << "Send the packet with positions: " << z << ", " << i << endl;
+socket->send(pack, SERVER_IP, SERVER_PORT);
+}
+aMoves.pop_front();
+}
+else {
 
-		}
-	}
+}
+}
 }
 */
+void sendEnterLobby() {
+
+}
 int main()
 {
+
+	int status = 0;
 	string nickname = "No Nickname";
 	string pwd = "";
 	int8_t headerEnter;
-	while (true) {
-		int enterMode = 0;
-		cout << "Use '1' to Login OR use '2' to Register" << endl;
-		cin >> enterMode;
-		if (enterMode == 1) {
-			cout << "Introduce your username: " << endl;
-			cin >> nickname;
-			cout << "Introduce your password: " << endl;
-			cin >> pwd;
-			headerEnter = (int8_t)PacketType::PT_LOGIN;
-			break;
-		}
-		else if (enterMode == 2) {
-			cout << "Pick your username: " << endl;
-			cin >> nickname;
-			cout << "Choose your password: " << endl;
-			cin >> pwd;
-			headerEnter = (int8_t)PacketType::PT_REGISTER;
-			break;
-		}
-		else {
-			cout << "Error" << endl;
-		}
-	}
-
-	//cout << "Hello new player! Introduce your name please: ";
-	//cin >> nickname;
 
 	IpAddress serverIp = SERVER_IP;
 	unsigned short port = SERVER_PORT;
@@ -343,282 +338,360 @@ int main()
 	int deltaX = 0;
 	int deltaY = 0;
 
-	for (int i = 0; i<4; i++) {
+	for (int i = 0; i<2; i++) {
 		PlayerInfo player;
 		aPlayers[i] = player;
 	}
 
 	thread t(receieveMessage, aSocket, nickname);
 	//thread sM(SendMoves, aSocket);
-		//thread r(rrr);
+	//thread r(rrr);
+
+	while (!enterLobby) {
+		switch (status)
+		{
+		case 0:
+		{
+			while (true) {
+				string enterMode = "0";
+				cout << "-----------------------" << endl << "Use '1' to Login OR use '2' to Register" << endl;
+				cin >> enterMode;
+				if (enterMode == "1") {
+					cout << "Introduce your username: " << endl;
+					cin >> nickname;
+					cout << "Introduce your password: " << endl;
+					cin >> pwd;
+					headerEnter = (int8_t)PacketType::PT_LOGIN;
+					break;
+				}
+				else if (enterMode == "2") {
+					cout << "Pick your username: " << endl;
+					cin >> nickname;
+					cout << "Choose your password: " << endl;
+					cin >> pwd;
+					headerEnter = (int8_t)PacketType::PT_REGISTER;
+					break;
+				}
+				else {
+					cout << "Error" << endl;
+				}
+			}
+			status++;
+			break;
+		}
+		case 1:
+		{
+			int i = 0;
+			while (!enterLobby) {
+				for (i == 0; i < 1; i++) {
+					//if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
+					Packet pack;
+					//int8_t header = (int8_t)PacketType::PT_HELLO;
+					pack << headerEnter << nickname << pwd;
+					aSocket->send(pack, serverIp, port);
+					//cout << "Loop" << endl;
+					//cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
+					//clockCounter.restart();
+					//}
+				}
+				if (retryLobby && !enterLobby) {
+					cout << endl << "The username has already been taken or invalid combination of username and/or password" << endl;
+					retryLobby = false;
+					status = 0;
+					break;
+				}
+			}
+			break;
+		}
+		default:
+			break;
+		}
+	}
+	_username = nickname;
+
+
+	//cout << "Hello new player! Introduce your name please: ";
+	//cin >> nickname;
+
 	do {
 		if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
 			Packet pack;
-			//int8_t header = (int8_t)PacketType::PT_HELLO;
-			pack << headerEnter << nickname << pwd;
+			int8_t header = (int8_t)PacketType::PT_HELLO;
+			pack << header << nickname;
 			aSocket->send(pack, serverIp, port);
-			cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
+			//cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
 			clockCounter.restart();
 		}
-	} while (!enterLobby);
+	} while (!playerOnline && enterLobby);
 
-		do {
-			if (clockCounter.getElapsedTime().asMilliseconds() >= 500) {
-				Packet pack;
-				int8_t header = (int8_t)PacketType::PT_HELLO;
-				pack << header << nickname;
-				aSocket->send(pack, serverIp, port);
-				cout << "Send, time: " << clockCounter.getElapsedTime().asMilliseconds() << endl;
-				clockCounter.restart();
-			}
-		} while (!playerOnline && enterLobby);
+	cout << "All OK, start!" << endl;
+	/*while (true) {
+	int temp = 0;
+	}*/
 
-		cout << "All OK, start!" << endl;
-		/*while (true) {
-			int temp = 0;
-		}*/
+	//-----START
 
-		//-----START
+	sf::Vector2f casillaOrigen, casillaDestino;
+	bool casillaMarcada = false;
 
-		sf::Vector2f casillaOrigen, casillaDestino;
-		bool casillaMarcada = false;
+	sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Greedy Coins");
+	while (window.isOpen())
+	{
+		sf::Event event;
 
-		sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Greedy Coins");
-		while (window.isOpen())
+		while (window.pollEvent(event))
 		{
-			sf::Event event;
-
-			while (window.pollEvent(event))
+			switch (event.type)
 			{
-				switch (event.type)
-				{
-				case sf::Event::Closed:
-					window.close();
-					break;
-				case sf::Event::KeyPressed:
-					if (event.key.code == sf::Keyboard::Escape) {
-						aSocket->unbind();
-					}
-					if (!gameOver) {
-						if (event.key.code == sf::Keyboard::X) {
-							Packet pckX;
-							int8_t hInteract = (int8_t)PacketType::PT_INTERACT;
-							pckX << hInteract << num;
-							aSocket->send(pckX, SERVER_IP, SERVER_PORT);
-						}
-
-						if (event.key.code == sf::Keyboard::Left)
-						{
-							deltaX -= 15;
-						}
-						else if (event.key.code == sf::Keyboard::Right)
-						{
-							deltaX += 15;	
-						}
-
-						if (event.key.code == sf::Keyboard::Up)
-						{
-							deltaY -= 15;
-						}
-						else if (event.key.code == sf::Keyboard::Down)
-						{
-							deltaY += 15;
-						}
-					}
-					break;
-				default:
-					break;
-
+			case sf::Event::Closed:
+				window.close();
+				break;
+			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::Escape) {
+					aSocket->unbind();
 				}
-			}
-			window.clear();
-
-			if (playerDisconnected) 
-			{
-				cout << "Disconnection text" << endl;
-				sf::Font font;
-				std::string pathFont = "arial.ttf";
-				if (!font.loadFromFile(pathFont))
-				{
-					std::cout << "No se pudo cargar la fuente" << std::endl;
-				}
-
-				sf::Text textDisconnected("Player disconnected", font);
-				textDisconnected.setPosition(sf::Vector2f(180, 50));
-				textDisconnected.setCharacterSize(18);
-				textDisconnected.setStyle(sf::Text::Bold);
-				textDisconnected.setFillColor(sf::Color::Magenta);
-				window.draw(textDisconnected);
-
-				if (clockDc.getElapsedTime().asSeconds() >= 3)
-				{
-					cout << "Clock DC restart" << endl;
-					playerDisconnected = false;
-					clockDc.restart();
-				}
-			}
-
-			if (!startGame)
-			{
-
-				//Player Draw
-				sf::CircleShape shapePlayer(RADIO_AVATAR);
-				shapePlayer.setFillColor(sf::Color::Green);
-
-				sf::Vector2f posPlayer(posX, posY);
-				//cout << posX << posY << endl;
-				//posPlayer = BoardToWindows(posPlayer);
-				shapePlayer.setPosition(posPlayer);
-
-				window.draw(shapePlayer);
-				//Si no tengo el turno, pinto un letrerito de "Esperando..."
-				sf::Font font;
-				std::string pathFont = "arial.ttf";
-				if (!font.loadFromFile(pathFont))
-				{
-					std::cout << "No se pudo cargar la fuente" << std::endl;
-				}
-
-				sf::Text textEsperando("Waiting...\nMove with arrows\nUse 'X' to collect coins", font);
-				textEsperando.setPosition(sf::Vector2f(180, 200));
-				textEsperando.setCharacterSize(24);
-				textEsperando.setStyle(sf::Text::Bold);
-				textEsperando.setFillColor(sf::Color::Green);
-				window.draw(textEsperando);
-			}
-			else if (startGame)
-			{
 				if (!gameOver) {
-					//Coin Draw
-					sf::CircleShape shapeCoin(RADIO_AVATAR);
-					shapeCoin.setFillColor(sf::Color::Yellow);
-
-					sf::Vector2f posCoin(coinX, coinY);
-					//posCoin = BoardToWindows(posCoin);
-					shapeCoin.setPosition(posCoin);
-
-					window.draw(shapeCoin);
-				}
-
-				for (int i = 0; i < 4; i++)
-				{
-					if (i != num) {
-						if (i == 0) {
-							//Player Draw
-							sf::CircleShape shapePlayer0(RADIO_AVATAR);
-							shapePlayer0.setFillColor(sf::Color::Red);
-
-							sf::Vector2f posPlayer0(aPlayers[i].GetX(), aPlayers[i].GetY());
-							//posPlayer0 = BoardToWindows(posPlayer0);
-							shapePlayer0.setPosition(posPlayer0);
-
-							if(aPlayers[i].online)
-								window.draw(shapePlayer0);
-						}
-						else if (i == 1) {
-							//Player Draw
-							sf::CircleShape shapePlayer1(RADIO_AVATAR);
-							shapePlayer1.setFillColor(sf::Color::Red);
-
-							sf::Vector2f posPlayer1(aPlayers[i].GetX(), aPlayers[i].GetY());
-							//posPlayer1 = BoardToWindows(posPlayer1);
-							shapePlayer1.setPosition(posPlayer1);
-
-							if (aPlayers[i].online)
-								window.draw(shapePlayer1);
-						}
-						else if (i == 2) {
-							//Player Draw
-							sf::CircleShape shapePlayer2(RADIO_AVATAR);
-							shapePlayer2.setFillColor(sf::Color::Red);
-
-							sf::Vector2f posPlayer2(aPlayers[i].GetX(), aPlayers[i].GetY());
-							//posPlayer2 = BoardToWindows(posPlayer2);
-							shapePlayer2.setPosition(posPlayer2);
-
-							if (aPlayers[i].online)
-								window.draw(shapePlayer2);
-						}
-						else if (i == 3) {
-							//Player Draw
-							sf::CircleShape shapePlayer3(RADIO_AVATAR);
-							shapePlayer3.setFillColor(sf::Color::Red);
-
-							sf::Vector2f posPlayer3(aPlayers[i].GetX(), aPlayers[i].GetY());
-							//posPlayer3 = BoardToWindows(posPlayer3);
-							shapePlayer3.setPosition(posPlayer3);
-
-							if (aPlayers[i].online)
-								window.draw(shapePlayer3);
-						}
+					if (event.key.code == sf::Keyboard::X) {
+						Packet pckX;
+						int8_t hInteract = (int8_t)PacketType::PT_INTERACT;
+						pckX << hInteract << num;
+						aSocket->send(pckX, SERVER_IP, SERVER_PORT);
 					}
 
-					else if (i == num) {
-						//Player Draw
-						sf::CircleShape shapePlayer(RADIO_AVATAR);
-						shapePlayer.setFillColor(sf::Color::Green);
+					if (event.key.code == sf::Keyboard::Left)
+					{
+						deltaX -= 15;
+					}
+					else if (event.key.code == sf::Keyboard::Right)
+					{
+						deltaX += 15;
+					}
 
-						sf::Vector2f posPlayer(aPlayers[i].GetX(), aPlayers[i].GetY());
-						//posPlayer = BoardToWindows(posPlayer);
-						shapePlayer.setPosition(posPlayer);
-
-						window.draw(shapePlayer);
+					if (event.key.code == sf::Keyboard::Up)
+					{
+						deltaY -= 15;
+					}
+					else if (event.key.code == sf::Keyboard::Down)
+					{
+						deltaY += 15;
 					}
 				}
+				break;
+			default:
+				break;
+
 			}
-			if (gameOver) 
+		}
+		window.clear();
+
+		if (playerDisconnected)
+		{
+			cout << "Disconnection text" << endl;
+			sf::Font font;
+			std::string pathFont = "arial.ttf";
+			if (!font.loadFromFile(pathFont))
 			{
-				sf::Font font;
-				std::string pathFont = "arial.ttf";
-				if (!font.loadFromFile(pathFont))
-				{
-					std::cout << "No se pudo cargar la fuente" << std::endl;
-				}
-
-				if (aPlayers[num].win == true) 
-				{
-
-					sf::Text textWin("YOU WIN " + aPlayers[num].nickname, font);
-					//center text
-					sf::FloatRect textRect = textWin.getLocalBounds();
-					textWin.setOrigin(textRect.width / 2, textRect.height / 2);
-					textWin.setPosition(sf::Vector2f(SCREEN_WIDTH/2, SCREEN_HEIGHT/2));
-					textWin.setCharacterSize(30);
-					textWin.setStyle(sf::Text::Bold);
-					textWin.setFillColor(sf::Color::Yellow);
-					window.draw(textWin);
-				}
-				else
-				{
-					sf::Text textLose("YOU LOSE " + aPlayers[num].nickname, font);
-					sf::FloatRect textRect = textLose.getLocalBounds();
-					textLose.setOrigin(textRect.width / 2, textRect.height / 2);
-					textLose.setPosition(sf::Vector2f(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
-					textLose.setCharacterSize(30);
-					textLose.setStyle(sf::Text::Bold);
-					textLose.setFillColor(sf::Color::Red);
-					window.draw(textLose);
-				}
+				std::cout << "No se pudo cargar la fuente" << std::endl;
 			}
 
-			//-----MOVED
-			if ((clockMove.getElapsedTime().asMilliseconds() >= 200 && (deltaX != 0 || deltaY != 0)) && startGame) {
-				cout << "Move detected" << endl;
-				idMove++;
-				AccumMove acc(idMove, num, deltaX, deltaY, aPlayers[num].GetX(), aPlayers[num].GetY());
-				deltaX = 0;
-				deltaY = 0;
-				aMoves.push_back(acc);
-				Packet pack = acc.CreatePacket();
-				aSocket->send(pack, SERVER_IP, SERVER_PORT);
-				clockMove.restart();
-			}
-			else{}
+			sf::Text textDisconnected("Player disconnected", font);
+			textDisconnected.setPosition(sf::Vector2f(180, 50));
+			textDisconnected.setCharacterSize(18);
+			textDisconnected.setStyle(sf::Text::Bold);
+			textDisconnected.setFillColor(sf::Color::Magenta);
+			window.draw(textDisconnected);
 
-			window.display();
+			if (clockDc.getElapsedTime().asSeconds() >= 3)
+			{
+				cout << "Clock DC restart" << endl;
+				playerDisconnected = false;
+				clockDc.restart();
+			}
 		}
 
-	
+		if (!startGame)
+		{
+
+			//Player Draw
+			sf::CircleShape shapePlayer(RADIO_AVATAR);
+			shapePlayer.setFillColor(sf::Color::Green);
+
+			sf::Vector2f posPlayer(posX, posY);
+			//cout << posX << posY << endl;
+			//posPlayer = BoardToWindows(posPlayer);
+			shapePlayer.setPosition(posPlayer);
+
+			window.draw(shapePlayer);
+			//Si no tengo el turno, pinto un letrerito de "Esperando..."
+			sf::Font font;
+			std::string pathFont = "arial.ttf";
+			if (!font.loadFromFile(pathFont))
+			{
+				std::cout << "No se pudo cargar la fuente" << std::endl;
+			}
+
+			sf::Text textEsperando("Waiting...\nMove with arrows\nUse 'X' to collect coins", font);
+			textEsperando.setPosition(sf::Vector2f(180, 200));
+			textEsperando.setCharacterSize(24);
+			textEsperando.setStyle(sf::Text::Bold);
+			textEsperando.setFillColor(sf::Color::Green);
+			window.draw(textEsperando);
+		}
+		else if (startGame)
+		{
+			if (!gameOver) {
+				//Coin Draw
+				sf::CircleShape shapeCoin(RADIO_AVATAR);
+				shapeCoin.setFillColor(sf::Color::Yellow);
+
+				sf::Vector2f posCoin(coinX, coinY);
+				//posCoin = BoardToWindows(posCoin);
+				shapeCoin.setPosition(posCoin);
+
+				window.draw(shapeCoin);
+			}
+
+			for (int i = 0; i < 2; i++)
+			{
+				if (i != num) {
+					if (i == 0) {
+						//Player Draw
+						sf::CircleShape shapePlayer0(RADIO_AVATAR);
+						shapePlayer0.setFillColor(sf::Color::Red);
+
+						sf::Vector2f posPlayer0(aPlayers[i].GetX(), aPlayers[i].GetY());
+						//posPlayer0 = BoardToWindows(posPlayer0);
+						shapePlayer0.setPosition(posPlayer0);
+
+						if (aPlayers[i].online)
+							window.draw(shapePlayer0);
+					}
+					else if (i == 1) {
+						//Player Draw
+						sf::CircleShape shapePlayer1(RADIO_AVATAR);
+						shapePlayer1.setFillColor(sf::Color::Red);
+
+						sf::Vector2f posPlayer1(aPlayers[i].GetX(), aPlayers[i].GetY());
+						//posPlayer1 = BoardToWindows(posPlayer1);
+						shapePlayer1.setPosition(posPlayer1);
+
+						if (aPlayers[i].online)
+							window.draw(shapePlayer1);
+					}
+					else if (i == 2) {
+						//Player Draw
+						sf::CircleShape shapePlayer2(RADIO_AVATAR);
+						shapePlayer2.setFillColor(sf::Color::Red);
+
+						sf::Vector2f posPlayer2(aPlayers[i].GetX(), aPlayers[i].GetY());
+						//posPlayer2 = BoardToWindows(posPlayer2);
+						shapePlayer2.setPosition(posPlayer2);
+
+						if (aPlayers[i].online)
+							window.draw(shapePlayer2);
+					}
+					else if (i == 3) {
+						//Player Draw
+						sf::CircleShape shapePlayer3(RADIO_AVATAR);
+						shapePlayer3.setFillColor(sf::Color::Red);
+
+						sf::Vector2f posPlayer3(aPlayers[i].GetX(), aPlayers[i].GetY());
+						//posPlayer3 = BoardToWindows(posPlayer3);
+						shapePlayer3.setPosition(posPlayer3);
+
+						if (aPlayers[i].online)
+							window.draw(shapePlayer3);
+					}
+				}
+
+				else if (i == num) {
+					//Player Draw
+					sf::CircleShape shapePlayer(RADIO_AVATAR);
+					shapePlayer.setFillColor(sf::Color::Green);
+
+					sf::Vector2f posPlayer(aPlayers[i].GetX(), aPlayers[i].GetY());
+					//posPlayer = BoardToWindows(posPlayer);
+					shapePlayer.setPosition(posPlayer);
+
+					window.draw(shapePlayer);
+				}
+			}
+		}
+		if (gameOver)
+		{
+			sf::Font font;
+			std::string pathFont = "arial.ttf";
+			if (!font.loadFromFile(pathFont))
+			{
+				std::cout << "No se pudo cargar la fuente" << std::endl;
+			}
+
+			if (aPlayers[num].win == true)
+			{
+
+				sf::Text textWin("YOU WIN " + _username, font);
+				//center text
+				sf::FloatRect textRect = textWin.getLocalBounds();
+				textWin.setOrigin(textRect.width / 2, textRect.height / 2);
+				textWin.setPosition(sf::Vector2f(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+				textWin.setCharacterSize(30);
+				textWin.setStyle(sf::Text::Bold);
+				textWin.setFillColor(sf::Color::Yellow);
+				window.draw(textWin);
+
+				//Ask server to increase WINS at DATA BASE
+				if (!numberIncrease) {
+					int8_t header = (int8_t)PacketType::PT_ENDGAME;
+					int8_t header2 = (int8_t)PacketType::PT_WIN;
+					Packet pck;
+					pck << header << header2 << _username;
+					cout << "Sending username: " + _username + " to increase wins and games at server" << endl;
+					aSocket->send(pck, serverIp, port);
+					numberIncrease = true;
+				}
+			}
+			else
+			{
+				sf::Text textLose("YOU LOSE " + _username, font);
+				sf::FloatRect textRect = textLose.getLocalBounds();
+				textLose.setOrigin(textRect.width / 2, textRect.height / 2);
+				textLose.setPosition(sf::Vector2f(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2));
+				textLose.setCharacterSize(30);
+				textLose.setStyle(sf::Text::Bold);
+				textLose.setFillColor(sf::Color::Red);
+				window.draw(textLose);
+
+				//Ask server to increase NUMBER OF GAMES at DATA BASE
+				if (!numberIncrease) {
+					int8_t header = (int8_t)PacketType::PT_ENDGAME;
+					int8_t header2 = (int8_t)PacketType::PT_LOSE;
+					Packet pck;
+					pck << header << header2 << _username;
+					cout << "Sending username: " + _username + " to increase number of games at server" << endl;
+					aSocket->send(pck, serverIp, port);
+					numberIncrease = true;
+				}
+			}
+		}
+
+		//-----MOVED
+		if ((clockMove.getElapsedTime().asMilliseconds() >= 100 && (deltaX != 0 || deltaY != 0)) && startGame) {
+			cout << "Move detected" << endl;
+			idMove++;
+			AccumMove acc(idMove, num, deltaX, deltaY, aPlayers[num].GetX(), aPlayers[num].GetY());
+			deltaX = 0;
+			deltaY = 0;
+			aMoves.push_back(acc);
+			Packet pack = acc.CreatePacket();
+			aSocket->send(pack, SERVER_IP, SERVER_PORT);
+			clockMove.restart();
+		}
+		else {}
+
+		window.display();
+	}
+
+
 	//getchar();
 	//return 0;
 }

@@ -57,3 +57,30 @@ bool DBManager::AddMatch(int idUser) {
 void DBManager::CloseSession() {
 
 }
+void DBManager::IncreaseGames(string name) {
+	cout << "Seaching name" << endl;
+	ResultSet* rs = stmt->executeQuery(("select count(*) from UserAccounts where UserName = '" + name + "'").c_str());
+	rs->next();
+	int num = rs->getInt(1);
+	delete rs;
+	if (num == 1)
+	{
+		cout << "Name found" << endl;
+		stmt->execute(("update UserAccounts set UserGames = UserGames + '1' where UserName = '" + name + "'").c_str());
+		cout << "Games updated" << endl;
+	}
+}
+
+void DBManager::IncreaseWins(string name) {
+	cout << "Seaching name" << endl;
+	ResultSet* rs = stmt->executeQuery(("select count(*) from UserAccounts where UserName = '" + name + "'").c_str());
+	rs->next();
+	int num = rs->getInt(1);
+	delete rs;
+	if (num == 1)
+	{
+		cout << "Name found" << endl;
+		stmt->execute(("update UserAccounts set UserWins = UserWins + '1' where UserName = '" + name + "'").c_str());
+		cout << "Wins updated" << endl;
+	}
+}

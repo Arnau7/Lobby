@@ -28,26 +28,26 @@ void DBManager::TestTable() {
 	resultSet = stmt->executeQuery("select UserName, PlayerPassword from Players");
 	while (resultSet->next())
 	{
-		std::cout << resultSet->getString("PlayerName").c_str() << " - " <<
-			resultSet->getString("PlayerPassword").c_str() << std::endl;
+	std::cout << resultSet->getString("PlayerName").c_str() << " - " <<
+	resultSet->getString("PlayerPassword").c_str() << std::endl;
 	}
 	delete resultSet;
 
 	resultSet = stmt->executeQuery("select count(*) from Players where PlayerName='player1' and PlayerPassword='1234'");
 	if (resultSet->next())
 	{
-		int num = resultSet->getInt(1);
+	int num = resultSet->getInt(1);
 
-		std::cout << "num resultados: " << num << std::endl;
+	std::cout << "num resultados: " << num << std::endl;
 	}
 	delete resultSet;
 
 	resultSet = stmt->executeQuery("select count(*) from Players where PlayerName='player1' and PlayerPassword='12345'");
 	if (resultSet->next())
 	{
-		int num = resultSet->getInt(1);
+	int num = resultSet->getInt(1);
 
-		std::cout << "num resultados: " << num << std::endl;
+	std::cout << "num resultados: " << num << std::endl;
 	}
 	delete resultSet;*/
 
@@ -88,6 +88,34 @@ bool DBManager::AddMatch(int idUser) {
 	return false;
 }
 
+void DBManager::BeginSession(string name) {
+	ResultSet* rs = stmt->executeQuery(("select UserID from UserAccounts where UserName = '" + name + "'").c_str());
+	cout << "Search done" << endl;
+	rs->next();
+	int id = rs->getInt(1);
+	cout << id << endl;
+	delete rs;
+	cout << "Rs deleted" << endl;
+	stmt->execute("insert into Session (SessionIDAcc) values ('id')");
+	cout << "Insert SessionID Acc" << endl;
+	stmt->executeQuery("select max(SessionID) from Session where SessionIDAcc = 'id'");
+	cout << "Insert SessionID" << endl;
+}
+
 void DBManager::CloseSession() {
 
+}
+
+void DBManager::IncreaseWins(string name) {
+	cout << "Seaching name" << endl;
+	ResultSet* rs = stmt->executeQuery(("select count(*) from UserAccounts where UserName = '" + name + "'").c_str());
+	rs->next();
+	int num = rs->getInt(1);
+	delete rs;
+	if (num == 1)
+	{
+		cout << "Name found" << endl;
+		stmt->execute(("update UserAccounts set UserWins = UserWins + '1' where UserName = '" + name + "'").c_str());
+		cout << "Wins updated" << endl;
+	}
 }

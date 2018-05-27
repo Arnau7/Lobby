@@ -11,7 +11,7 @@ int main()
 
 	//dbM->TestTable();
 
-	dbM->AltaCuenta("Joan", "linux123");
-	//dbM->Login("Miquel", "linux1234");
+	//dbM->AltaCuenta("Joan", "linux123");
+	dbM->Login("Ripoll", "123");
 	getchar();
 }

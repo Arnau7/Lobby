@@ -14,7 +14,7 @@ private:
 	int maxPlayers;
 	int playersOnline;
 	map<int, PlayerInfo> aPlayers;
-	Time clock;
+	sf::Clock clock;
 	int wins; // Per al matchmaking
 public:
 	Game();

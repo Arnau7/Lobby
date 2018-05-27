@@ -9,6 +9,8 @@ GameManager::GameManager()
 int GameManager::MatchPlayer(PlayerInfo player) {
 	// Cerca quina de les partides de aGames és la mes adequada (segons el wins) i retorna l'Id de la partida
 	// Aqui dins ja enviam tot al player???
+
+	return 0;
 }
 
 void GameManager::CreateGame(int idGame, int maxPlayer, std::string gameName) {

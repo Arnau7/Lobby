@@ -15,6 +15,7 @@ public:
 	int coins;
 	bool win, online;
 	std::string nickname;
+	sf::Clock inactivityClock;
 	PlayerInfo();
 	PlayerInfo(int _id, std::string _nickname);
 	void SetPosition(int _x, int _y);

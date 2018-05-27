@@ -9,17 +9,20 @@ using namespace sf;
 class Game
 {
 private:
+	int idMatch;
 	string gameName;
 	int maxPlayers;
 	int playersOnline;
 	map<int, PlayerInfo> aPlayers;
-	float coinX, coinY;
 	Time clock;
-	int gameID;
+	int wins; // Per al matchmaking
 public:
 	Game();
 	Game(int, int, std::string);
+	void AddPlayerToGame(PlayerInfo player);
+	void StartGame();
 	void Update();
+	void SendStart();
 	~Game();
 
 };
